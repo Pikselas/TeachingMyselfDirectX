@@ -80,7 +80,6 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		struct VertexType
 		{
 			float x, y, z;
-			unsigned char r, g, b, a;
 		};
 
 		//creating an array of vertices that will be drawn
@@ -90,14 +89,14 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 
 		VertexType vtx[] = {
 			
-			{ -1.0f,-1.0f,-1.0f	, 255 , 0 , 0 },
-			{ 1.0f,-1.0f,-1.0f	, 0 , 255 , 0 },
-			{ -1.0f,1.0f,-1.0f	, 0 , 0 , 255 },
-			{ 1.0f,1.0f,-1.0f	, 255 , 255,0},
-			{ -1.0f,-1.0f,1.0f	, 0 , 255 , 255 },
-			{ 1.0f,-1.0f,1.0f	,255 , 0 , 255 },
-			{ -1.0f,1.0f,1.0f	,200 , 0 , 255},
-			{ 1.0f,1.0f,1.0f	, 100 , 200 , 150 },
+			{ -1.0f,-1.0f,-1.0f	},
+			{ 1.0f,-1.0f,-1.0f	},
+			{ -1.0f,1.0f,-1.0f	},
+			{ 1.0f,1.0f,-1.0f	},
+			{ -1.0f,-1.0f,1.0f	},
+			{ 1.0f,-1.0f,1.0f	},
+			{ -1.0f,1.0f,1.0f	},
+			{ 1.0f,1.0f,1.0f	},
 
 		};
 
@@ -135,9 +134,6 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 
 			//tells that the first 3 * 4 * 8 bits = 32 * 3 = 96 bits of the vertex struct are for positions for every vertex
 			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0},
-			//and next 3 * 1 * 8 = 24 bits are color value for each of those vertex
-			// unorm for automaticall convert 0-255 range 0.0-1.0 range
-			{"COLOR",0,DXGI_FORMAT_R8G8B8A8_UNORM,0,12u,D3D11_INPUT_PER_VERTEX_DATA,0}
 		};
 		//creating and setting
 		pDevice->CreateInputLayout(ied, (UINT)std::size(ied), blb->GetBufferPointer(), blb->GetBufferSize(), &inpl);
@@ -186,6 +182,27 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 
 		pDevice->CreateBuffer(&indesc, &isd, &IndxBuff);
 		pDeviceContext->IASetIndexBuffer(IndxBuff.Get(), DXGI_FORMAT_R16_UINT, 0u);
+
+		const float color[][4] = { {0.0f , 1.0f , 1.0f} , 
+								   {1.0f , 0.0f , 1.0f} ,
+								   {0.5f , 0.2f , 1.0f},
+								   {0.8f , 0.0f , 0.5f},
+								   {1.0f , 1.0f , 0.5f},
+								   {0.6f , 0.2f , 0.2f}
+		};
+
+		Microsoft::WRL::ComPtr<ID3D11Buffer> ColorBuff;
+		D3D11_BUFFER_DESC cbuffdsc = { 0 };
+		cbuffdsc.ByteWidth = sizeof(color);
+		cbuffdsc.Usage = D3D11_USAGE_DYNAMIC;  
+		cbuffdsc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		cbuffdsc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; 
+
+		D3D11_SUBRESOURCE_DATA cbuffdt = { 0 };
+		cbuffdt.pSysMem = color;
+
+		pDevice->CreateBuffer(&cbuffdsc, &cbuffdt, &ColorBuff);
+		pDeviceContext->PSSetConstantBuffers(0u, 1u, ColorBuff.GetAddressOf());
 
 		auto t_point = std::chrono::system_clock::now();
 
