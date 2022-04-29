@@ -63,29 +63,29 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		sd.SwapEffect = DXGI_SWAP_EFFECT_DISCARD; // discard the effects for swapping frames
 		sd.Windowed = TRUE;
 		// for antialiasing we don't want it right now
-		sd.SampleDesc.Count = 1; 
+		sd.SampleDesc.Count = 1;
 		sd.SampleDesc.Quality = 0;
-		
-		if(auto hrcode = D3D11CreateDeviceAndSwapChain(0, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &sd, &pSwapChain, &pDevice, nullptr, &pDeviceContext) ; FAILED(hrcode) )
+
+		if (auto hrcode = D3D11CreateDeviceAndSwapChain(0, D3D_DRIVER_TYPE_HARDWARE, nullptr, 0, nullptr, 0, D3D11_SDK_VERSION, &sd, &pSwapChain, &pDevice, nullptr, &pDeviceContext); FAILED(hrcode))
 		{
 			throw hrcode;
 		}
-		
+
 		pSwapChain->GetBuffer(0, __uuidof(ID3D11Resource), &pBackBuffer);
 		pDevice->CreateRenderTargetView(pBackBuffer.Get(), nullptr, &pTarget);
 
 		// base structure for every vertex type
-		struct VertexType 
+		struct VertexType
 		{
-			float x, y , z;
-			unsigned char r, g, b , a;
+			float x, y, z;
+			unsigned char r, g, b, a;
 		};
 
 		//creating an array of vertices that will be drawn
 		//below points are position for a triangle showing at the middle of the screen
 		//viewport's range is from -1.0f to 1.0f (x,y,z axis)
 		//triangle will be drawn using vertices at clockwise
-		
+
 		VertexType vtx[] = {
 			{0.0 , 0.5 , 0.0 , 255 , 0 , 0 },
 			{0.5 , -0.5 , 0.0 , 0 , 255 , 0 },
@@ -93,7 +93,7 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 			{-0.5 , 0.0  ,0.0 , 0 , 0 , 255 },
 			{0.5 , 0.0  ,0.0 , 0 , 255 , 0},
 		};
-		
+
 		//vertex buffer description
 		D3D11_BUFFER_DESC bd = { 0 };
 		bd.ByteWidth = sizeof(vtx);					//total array size
@@ -102,12 +102,12 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		bd.CPUAccessFlags = 0u;						// we don't want any cpu access for now so setting it to 0 for now
 		bd.MiscFlags = 0u;							// misscellinious flag for buffer configuration (we don't want it now either)
 		bd.StructureByteStride = sizeof(VertexType); // Size of every vertex in the array 
-		
+
 		//holds the data pointer that will be used in vertex buffer
 		D3D11_SUBRESOURCE_DATA subd = { 0 };
 		subd.pSysMem = vtx;							// pointer to array so that it can copy all the array data to the buffer
 
-		Microsoft::WRL::ComPtr<ID3D11Buffer> VBuffer; 
+		Microsoft::WRL::ComPtr<ID3D11Buffer> VBuffer;
 		pDevice->CreateBuffer(&bd, &subd, &VBuffer);
 		UINT stride = sizeof(VertexType);			// size of every vertex
 		UINT offset = 0u;							// displacement after which the actual data start (so 0 because no displacement is there)
@@ -124,7 +124,7 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		//semantic name , semantic index , format , inputslot , offset , input data class , data step rate
 
 		D3D11_INPUT_ELEMENT_DESC ied[] = {
-			
+
 			//tells that the first 3 * 4 * 8 bits = 32 * 3 = 96 bits of the vertex struct are for positions for every vertex
 			{"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0,0,D3D11_INPUT_PER_VERTEX_DATA,0},
 			//and next 3 * 1 * 8 = 24 bits are color value for each of those vertex
@@ -134,16 +134,16 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		//creating and setting
 		pDevice->CreateInputLayout(ied, (UINT)std::size(ied), blb->GetBufferPointer(), blb->GetBufferSize(), &inpl);
 		pDeviceContext->IASetInputLayout(inpl.Get());
-		
+
 		Microsoft::WRL::ComPtr<ID3D11PixelShader> ps; // shader pointer
 		D3DReadFileToBlob(L"PixelShader.cso", &blb); // reading file to blob
-		pDevice ->CreatePixelShader(blb->GetBufferPointer(), blb->GetBufferSize(), nullptr, &ps); // creating
+		pDevice->CreatePixelShader(blb->GetBufferPointer(), blb->GetBufferSize(), nullptr, &ps); // creating
 		pDeviceContext->PSSetShader(ps.Get(), nullptr, 0u); // setting
 
 		pDeviceContext->OMSetRenderTargets(1u, pTarget.GetAddressOf(), nullptr);
 
 		D3D11_VIEWPORT vp = {};
-		vp.TopLeftX = 0; 
+		vp.TopLeftX = 0;
 		vp.TopLeftY = 0;
 		vp.Width = 800;  //screen height
 		vp.Height = 600; // screen width
@@ -155,14 +155,14 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		const unsigned short indices[] = {
-		
+
 			0 , 1 , 2,
 			0 , 2 , 3,
 			0 , 4 , 1
 		};
 
 		Microsoft::WRL::ComPtr<ID3D11Buffer> IndxBuff;
-		
+
 		D3D11_BUFFER_DESC indesc = { 0 };
 		indesc.ByteWidth = sizeof(indices);
 		indesc.Usage = D3D11_USAGE_DEFAULT;
@@ -170,7 +170,7 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		indesc.StructureByteStride = sizeof(unsigned short);
 		indesc.CPUAccessFlags = 0u;
 		indesc.MiscFlags = 0u;
-		
+
 		D3D11_SUBRESOURCE_DATA isd = { 0 };
 		isd.pSysMem = indices;
 
@@ -178,8 +178,33 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		pDeviceContext->IASetIndexBuffer(IndxBuff.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
 
+		size_t sz = 0;
 		while (true)
 		{
+			const int angle = ++sz;
+			//a rotation around z axis matrix
+			const float TransformMatrix[4][4] = {
+
+								{std::cos(angle)  , -std::sin(angle) , 0.0f , 0.0f},
+								{std::sin(angle) , std::cos(angle) , 0.0f , 0.0f},
+								{    0.0f		  ,     0.0f        , 1.0f , 0.0f},
+								{	0.0f		  ,		0.0f		, 0.0f , 1.0f}
+			};
+
+			Microsoft::WRL::ComPtr<ID3D11Buffer> ConstBuff;
+			D3D11_BUFFER_DESC cbuffdsc = { 0 };
+			cbuffdsc.ByteWidth = sizeof(TransformMatrix);
+			cbuffdsc.Usage = D3D11_USAGE_DYNAMIC;  // because we are gonna change it from cpu side (not now but later)
+			cbuffdsc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+			cbuffdsc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; // giving access to cpu so that we can change it
+
+			D3D11_SUBRESOURCE_DATA cbuffdt = { 0 };
+			cbuffdt.pSysMem = TransformMatrix;
+
+			pDevice->CreateBuffer(&cbuffdsc, &cbuffdt, &ConstBuff);
+			pDeviceContext->VSSetConstantBuffers(0u, 1u, ConstBuff.GetAddressOf());
+
+
 			if (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE) != 0)
 			{
 				if (msg.message == WM_QUIT)
@@ -193,7 +218,7 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 			{
 				//throw 1;
 			}
-			pDeviceContext->DrawIndexed(std::size(indices) , 0u , 0u);
+			pDeviceContext->DrawIndexed(std::size(indices), 0u, 0u);
 		}
 	}
 	catch (HRESULT hrcode)
@@ -202,7 +227,7 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		FormatMessage(
 			FORMAT_MESSAGE_ALLOCATE_BUFFER |
 			FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-			nullptr, hrcode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT) , reinterpret_cast<LPSTR>(&msgBuff) , 0 , nullptr);
+			nullptr, hrcode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), reinterpret_cast<LPSTR>(&msgBuff), 0, nullptr);
 
 		MessageBox(nullptr, msgBuff, "Error", MB_ICONERROR);
 

@@ -1,5 +1,3 @@
-
-
 //the input and output need to be labeled by semantics
 
 struct VertexShaderOut // this is the ouput type
@@ -8,6 +6,11 @@ struct VertexShaderOut // this is the ouput type
 	float4 pos : SV_POSITION; // this is the SYSTEM_VALUE SEMANTIC this is fixed (and defined by the API) 
 };
 
+//cbuffer for constant buffer
+cbuffer cbf
+{
+	row_major matrix transform; // the matrix (in cpu side the matrix is in row order but in gpu it's in coloumn order so fixinf it)
+};
 
 // main is the entry point and it takes 2 parameters
 // first one is position and second one is color
@@ -17,7 +20,7 @@ struct VertexShaderOut // this is the ouput type
 VertexShaderOut main(float3 pos : POSITION , float4 col : COLOR)
 {
 	VertexShaderOut Out;
-	Out.pos = float4(pos , 1.0f) ;
+	Out.pos = mul(float4(pos , 1.0f) , transform);
 	Out.color = col;
 	return Out;
 }
