@@ -89,12 +89,18 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		//triangle will be drawn using vertices at clockwise
 
 		VertexType vtx[] = {
-			{0.0 , 0.5 , 0.0 , 255 , 0 , 0 },
-			{0.5 , -0.5 , 0.0 , 0 , 255 , 0 },
-			{-0.5 , -0.5 , 0.0 ,  0 , 0, 255 },
-			{-0.5 , 0.0  ,0.0 , 0 , 0 , 255 },
-			{0.5 , 0.0  ,0.0 , 0 , 255 , 0},
+			
+			{ -1.0f,-1.0f,-1.0f	, 255 , 0 , 0 },
+			{ 1.0f,-1.0f,-1.0f	, 0 , 255 , 0 },
+			{ -1.0f,1.0f,-1.0f	, 0 , 0 , 255 },
+			{ 1.0f,1.0f,-1.0f	, 255 , 255,0},
+			{ -1.0f,-1.0f,1.0f	, 0 , 255 , 255 },
+			{ 1.0f,-1.0f,1.0f	,255 , 0 , 255 },
+			{ -1.0f,1.0f,1.0f	,200 , 0 , 255},
+			{ 1.0f,1.0f,1.0f	, 100 , 200 , 150 },
+
 		};
+
 
 		//vertex buffer description
 		D3D11_BUFFER_DESC bd = { 0 };
@@ -157,10 +163,12 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		pDeviceContext->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
 		const unsigned short indices[] = {
-
-			0 , 1 , 2,
-			0 , 2 , 3,
-			0 , 4 , 1
+			0,2,1, 2,3,1,
+			1,3,5, 3,7,5,
+			2,6,3, 3,6,7,
+			4,5,7, 4,7,6,
+			0,4,2, 2,4,6,
+			0,1,4, 1,5,4
 		};
 
 		Microsoft::WRL::ComPtr<ID3D11Buffer> IndxBuff;
@@ -191,7 +199,8 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 			const double angle = (d = std::chrono::system_clock::now() - t_point).count();
 			//a rotation around z axis matrix
 			
-			DirectX::XMMATRIX TransformMatrix = DirectX::XMMatrixRotationZ(angle);
+			DirectX::XMMATRIX TransformMatrix = DirectX::XMMatrixTranspose(DirectX::XMMatrixRotationZ(angle) * DirectX::XMMatrixRotationX(angle) * DirectX::XMMatrixRotationY(angle)  * DirectX::XMMatrixTranslation(0.0 , 0.0 , 4.0f)
+											             * DirectX::XMMatrixPerspectiveLH(1.0f , 3.0f / 4.0f , 0.5 , 10.0f));
 
 			Microsoft::WRL::ComPtr<ID3D11Buffer> ConstBuff;
 			D3D11_BUFFER_DESC cbuffdsc = { 0 };
