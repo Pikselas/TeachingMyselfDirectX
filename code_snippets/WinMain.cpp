@@ -4,6 +4,8 @@
 #include<wrl.h>
 #include<d3dcompiler.h>
 #include<sstream>
+#include<DirectXMath.h>
+#include<chrono>
 #pragma comment(lib,"d3d11.lib")
 #pragma comment(lib,"D3DCompiler.lib")
 
@@ -177,19 +179,19 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 		pDevice->CreateBuffer(&indesc, &isd, &IndxBuff);
 		pDeviceContext->IASetIndexBuffer(IndxBuff.Get(), DXGI_FORMAT_R16_UINT, 0u);
 
+		auto t_point = std::chrono::system_clock::now();
 
-		size_t sz = 0;
+		float col[] = {1.0f , 1.0f , 1.0f , 1.0f};
+
+		std::chrono::duration<double> d;
+
 		while (true)
 		{
-			const int angle = ++sz;
-			//a rotation around z axis matrix
-			const float TransformMatrix[4][4] = {
 
-								{std::cos(angle)  , -std::sin(angle) , 0.0f , 0.0f},
-								{std::sin(angle) , std::cos(angle) , 0.0f , 0.0f},
-								{    0.0f		  ,     0.0f        , 1.0f , 0.0f},
-								{	0.0f		  ,		0.0f		, 0.0f , 1.0f}
-			};
+			const double angle = (d = std::chrono::system_clock::now() - t_point).count();
+			//a rotation around z axis matrix
+			
+			DirectX::XMMATRIX TransformMatrix = DirectX::XMMatrixRotationZ(angle);
 
 			Microsoft::WRL::ComPtr<ID3D11Buffer> ConstBuff;
 			D3D11_BUFFER_DESC cbuffdsc = { 0 };
@@ -199,7 +201,7 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 			cbuffdsc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE; // giving access to cpu so that we can change it
 
 			D3D11_SUBRESOURCE_DATA cbuffdt = { 0 };
-			cbuffdt.pSysMem = TransformMatrix;
+			cbuffdt.pSysMem = &TransformMatrix;
 
 			pDevice->CreateBuffer(&cbuffdsc, &cbuffdt, &ConstBuff);
 			pDeviceContext->VSSetConstantBuffers(0u, 1u, ConstBuff.GetAddressOf());
@@ -218,6 +220,7 @@ int _stdcall WinMain(HINSTANCE hinstance, HINSTANCE hprev, LPSTR lpcmd, int cmds
 			{
 				//throw 1;
 			}
+			pDeviceContext->ClearRenderTargetView(pTarget.Get(), col);
 			pDeviceContext->DrawIndexed(std::size(indices), 0u, 0u);
 		}
 	}
